@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
+const FX_CLEARANCE_FEE = 300;
+
 const initialAccounts = [
-  { id: 'checking', name: 'Everyday Checking', number: '2340 0981 24', balance: 8425.62, type: 'Checking' },
-  { id: 'savings', name: 'High Yield Savings', number: '8923 0077 19', balance: 15600.0, type: 'Savings' },
-  { id: 'travel', name: 'Travel Rewards', number: '9981 1244 08', balance: 4820.25, type: 'Credit' },
+  { id: 'checking', name: 'Everyday Checking', number: '2340 0981 24', balance: 8425.62, type: 'Checking', accent: '#0c4fe4' },
+  { id: 'savings', name: 'High Yield Savings', number: '8923 0077 19', balance: 15600.0, type: 'Savings', accent: '#09a4d8' },
+  { id: 'travel', name: 'Travel Rewards', number: '9981 1244 08', balance: 4820.25, type: 'Credit', accent: '#1b2a5e' },
 ];
 
 const initialTransfers = [
-  { id: 1, recipient: 'Maya Patel', account: '7710 0944 44', amount: 250, date: 'Today, 09:15 AM', type: 'Local transfer' },
-  { id: 2, recipient: 'Daniel Kim', account: '1100 2884 28', amount: 120, date: 'Yesterday, 6:40 PM', type: 'P2P' },
-  { id: 3, recipient: 'Liam Chen', account: '8831 8201 17', amount: 650, date: 'Mon, 11:20 AM', type: 'Wire transfer' },
+  { id: 1, recipient: 'Maya Patel', account: '7710 0944 44', amount: 250, fee: FX_CLEARANCE_FEE, total: 550, date: 'Today, 09:15 AM', type: 'Local transfer' },
+  { id: 2, recipient: 'Daniel Kim', account: '1100 2884 28', amount: 120, fee: FX_CLEARANCE_FEE, total: 420, date: 'Yesterday, 6:40 PM', type: 'P2P' },
+  { id: 3, recipient: 'Liam Chen', account: '8831 8201 17', amount: 650, fee: FX_CLEARANCE_FEE, total: 950, date: 'Mon, 11:20 AM', type: 'Wire transfer' },
 ];
 
 const initialBills = [
@@ -18,6 +20,16 @@ const initialBills = [
   { name: 'Internet', amount: 78, due: 'Due in 6 days' },
   { name: 'Insurance', amount: 160, due: 'Due in 9 days' },
 ];
+
+const spendingCategories = [
+  { label: 'Housing', value: 34, amount: 4200 },
+  { label: 'Food', value: 21, amount: 1800 },
+  { label: 'Travel', value: 18, amount: 1500 },
+  { label: 'Bills', value: 16, amount: 1200 },
+  { label: 'Other', value: 11, amount: 760 },
+];
+
+const weeklySpend = [66, 72, 85, 64, 92, 78, 58];
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-US', {
@@ -27,7 +39,7 @@ const formatCurrency = (value) =>
   }).format(value);
 
 const navItems = [
-  { label: 'Overview', to: '/dashboard', active: true },
+  { label: 'Overview', to: '/dashboard' },
   { label: 'Transfers', to: '/transfer' },
   { label: 'Accounts', to: '/dashboard' },
   { label: 'Cards', to: '/dashboard' },
@@ -35,7 +47,7 @@ const navItems = [
 ];
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [accounts, setAccounts] = useState(initialAccounts);
   const [transfers, setTransfers] = useState(initialTransfers);
 
@@ -47,10 +59,13 @@ function App() {
   const handleLogin = () => setIsLoggedIn(true);
 
   const handleTransfer = ({ recipient, accountNumber, amount, memo }) => {
-    const nextAmount = Number(amount);
+    const transferAmount = Number(amount);
+    const fee = FX_CLEARANCE_FEE;
+    const totalDebited = transferAmount + fee;
+
     const updatedAccounts = accounts.map((account) => {
       if (account.id === 'checking') {
-        return { ...account, balance: Number((account.balance - nextAmount).toFixed(2)) };
+        return { ...account, balance: Number((account.balance - totalDebited).toFixed(2)) };
       }
       return account;
     });
@@ -61,7 +76,9 @@ function App() {
         id: Date.now(),
         recipient,
         account: accountNumber,
-        amount: nextAmount,
+        amount: transferAmount,
+        fee,
+        total: totalDebited,
         date: 'Today, 11:45 AM',
         type: 'Local transfer',
         memo,
@@ -129,6 +146,7 @@ function LoginPage({ onLogin }) {
               <h2>National Trust Bank</h2>
             </div>
           </div>
+
           <div className="hero-box">
             <p>Banking designed for momentum.</p>
             <h1>More control. More clarity. More confidence.</h1>
@@ -180,8 +198,6 @@ function LoginPage({ onLogin }) {
 function DashboardPage({ accounts, totalBalance, transfers, bills }) {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const cardSpend = [35, 52, 68, 45, 74, 90, 58];
 
   return (
     <div className="app-shell">
@@ -270,7 +286,7 @@ function DashboardPage({ accounts, totalBalance, transfers, bills }) {
             </div>
 
             <div className="chart-bars">
-              {cardSpend.map((value, index) => (
+              {weeklySpend.map((value, index) => (
                 <div key={index} className="bar-column">
                   <span className="bar" style={{ height: `${value}%` }} />
                   <small>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]}</small>
@@ -338,9 +354,61 @@ function DashboardPage({ accounts, totalBalance, transfers, bills }) {
                     <strong>{transfer.recipient}</strong>
                     <small>{transfer.type} • {transfer.date}</small>
                   </div>
-                  <span>{formatCurrency(transfer.amount)}</span>
+                  <span>{formatCurrency((transfer.total ?? (transfer.amount || 0) + (transfer.fee || 0)))}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="finance-grid">
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Spending</p>
+                <h3>Breakdown</h3>
+              </div>
+            </div>
+
+            <div className="spend-list">
+              {spendingCategories.map((category) => (
+                <div key={category.label} className="spend-row">
+                  <div className="sl-row-head">
+                    <span>{category.label}</span>
+                    <strong>{formatCurrency(category.amount)}</strong>
+                  </div>
+                  <div className="progress-line soft">
+                    <span style={{ width: `${category.value}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Cards</p>
+                <h3>Primary card</h3>
+              </div>
+            </div>
+
+            <div className="credit-card">
+              <div className="card-top">
+                <span>National Trust</span>
+                <span className="chip-mini">VISA</span>
+              </div>
+              <div className="card-number">•••• 4498</div>
+              <div className="card-footer">
+                <div>
+                  <small>Cardholder</small>
+                  <strong>Jordan Lewis</strong>
+                </div>
+                <div>
+                  <small>Exp</small>
+                  <strong>09/28</strong>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -362,6 +430,9 @@ function TransferPage({ accounts, onTransfer, transfers }) {
   const [success, setSuccess] = useState('');
 
   const selectedAccount = accounts.find((account) => account.id === form.fromAccount) || accounts[0];
+  const transferAmount = Number(form.amount || 0);
+  const clearanceFee = FX_CLEARANCE_FEE;
+  const totalDebited = transferAmount + clearanceFee;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -384,8 +455,8 @@ function TransferPage({ accounts, onTransfer, transfers }) {
       return;
     }
 
-    if (selectedAccount.balance < amount) {
-      setError('Insufficient funds in the selected account.');
+    if (selectedAccount.balance < amount + clearanceFee) {
+      setError('Insufficient funds. Please cover the transfer amount plus the $300 FX clearance fee.');
       setSuccess('');
       return;
     }
@@ -442,6 +513,14 @@ function TransferPage({ accounts, onTransfer, transfers }) {
 
         <div className="transfer-grid">
           <section className="panel transfer-form-panel">
+            <div className="fee-banner">
+              <div>
+                <strong>FX Clearance Fee</strong>
+                <span>Applied separately to every transfer.</span>
+              </div>
+              <span className="fee-badge">{formatCurrency(clearanceFee)}</span>
+            </div>
+
             <form onSubmit={handleSubmit} className="transfer-form">
               <div className="form-row horizontal">
                 <label>
@@ -485,6 +564,21 @@ function TransferPage({ accounts, onTransfer, transfers }) {
                 </label>
               </div>
 
+              <div className="fee-breakdown">
+                <div className="fee-line">
+                  <span>Transfer amount</span>
+                  <strong>{formatCurrency(transferAmount)}</strong>
+                </div>
+                <div className="fee-line">
+                  <span>FX clearance fee</span>
+                  <strong>{formatCurrency(clearanceFee)}</strong>
+                </div>
+                <div className="fee-line total">
+                  <span>Total charged</span>
+                  <strong>{formatCurrency(totalDebited)}</strong>
+                </div>
+              </div>
+
               {error && <div className="form-alert error">{error}</div>}
               {success && <div className="form-alert success">{success}</div>}
 
@@ -510,7 +604,7 @@ function TransferPage({ accounts, onTransfer, transfers }) {
                     <strong>{transfer.recipient}</strong>
                     <small>{transfer.type}</small>
                   </div>
-                  <span>{formatCurrency(transfer.amount)}</span>
+                  <span>{formatCurrency(transfer.total ?? (transfer.amount || 0) + (transfer.fee || 0))}</span>
                 </div>
               ))}
             </div>
