@@ -338,6 +338,14 @@ input:focus, select:focus {
   background: linear-gradient(90deg, #5cabff 0%, #7cebcc 100%);
 }
 
+.progress-line.soft {
+  background: rgba(12, 79, 228, 0.08);
+}
+
+.progress-line.soft span {
+  background: linear-gradient(90deg, #7db0ff 0%, #0c4fe4 100%);
+}
+
 .side-meta,
 .side-balance {
   display: flex;
@@ -463,7 +471,8 @@ input:focus, select:focus {
 }
 
 .content-grid,
-.bottom-grid {
+.bottom-grid,
+.finance-grid {
   display: grid;
   grid-template-columns: 1.35fr 0.95fr;
   gap: 18px;
@@ -524,7 +533,8 @@ input:focus, select:focus {
 
 .bill-list,
 .account-list,
-.transfer-list {
+.transfer-list,
+.spend-list {
   display: grid;
   gap: 12px;
 }
@@ -570,6 +580,70 @@ input:focus, select:focus {
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--navy);
+}
+
+.spend-row {
+  display: grid;
+  gap: 8px;
+}
+
+.sl-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--navy);
+}
+
+.credit-card {
+  border-radius: 20px;
+  padding: 22px 18px;
+  background: linear-gradient(135deg, #0a1537 0%, #0d4fe4 58%, #6ea5ff 100%);
+  color: white;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 14px 20px rgba(12, 79, 228, 0.2);
+}
+
+.card-top,
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.card-top {
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chip-mini {
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.68rem;
+}
+
+.card-number {
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.card-footer small {
+  display: block;
+  font-size: 0.62rem;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+.card-footer strong {
+  font-size: 0.82rem;
 }
 
 .transfer-layout {
@@ -645,6 +719,7 @@ input:focus, select:focus {
   .stats-grid,
   .content-grid,
   .bottom-grid,
+  .finance-grid,
   .transfer-grid {
     grid-template-columns: 1fr;
   }
